@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grille d'Amsler</title>
+<meta name="description" content="Grille d’Amsler en ligne : information de prévention sur la vision centrale et les signes d’alerte du décollement de rétine.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👁️</text></svg>">
+<style>
+@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:italic;font-weight:400;font-display:swap;src:url('fonts/atkinson-hyperlegible-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/atkinson-hyperlegible-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:italic;font-weight:700;font-display:swap;src:url('fonts/atkinson-hyperlegible-latin-700-italic.woff2') format('woff2')}
+
+:root{
+  --bg:#F4F7F8; --surface:#FFFFFF; --ink:#13222C; --muted:#4E5E69; --line:#D3DCE2; --border-ui:#66757F;
+  --accent:#0A5A69; --accent-ink:#FFFFFF; --accent-soft:#E2F0F2;
+  --alert:#A8231B; --alert-bg:#FBEBE9; --warn:#7A4A00; --warn-bg:#FFF3DD;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E161B; --surface:#162128; --ink:#E4ECF0; --muted:#A3B1BA; --line:#2A3943; --border-ui:#8797A2;
+    --accent:#62C3D2; --accent-ink:#052229; --accent-soft:#16343A;
+    --alert:#FF9389; --alert-bg:#3A1917; --warn:#F3BC62; --warn-bg:#33270F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E161B; --surface:#162128; --ink:#E4ECF0; --muted:#A3B1BA; --line:#2A3943; --border-ui:#8797A2;
+  --accent:#62C3D2; --accent-ink:#052229; --accent-soft:#16343A;
+  --alert:#FF9389; --alert-bg:#3A1917; --warn:#F3BC62; --warn-bg:#33270F;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size:1.125rem; line-height:1.55;
+}
+.sr{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+.skip{position:absolute; left:1rem; top:-100px; z-index:20; background:var(--accent); color:var(--accent-ink); padding:.6rem 1rem; border-radius:8px; font-weight:700; text-decoration:none}
+.skip:focus{top:calc(env(safe-area-inset-top,0px) + .5rem)}
+.wrap{max-width:46rem; margin:0 auto; padding:1rem 1rem 3rem}
+main:focus{outline:none}
+
+.topbar{display:flex; justify-content:flex-end}
+.lang{display:inline-flex; gap:.4rem}
+.lang button{padding:.35rem .9rem}
+.lang button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+
+h1{font-size:2.1rem; line-height:1.1; margin:.5rem 0 .4rem; letter-spacing:-.01em}
+h2{font-size:1.4rem; line-height:1.2; margin:0 0 .75rem}
+p{margin:0 0 .8rem}
+.lede{color:var(--muted); margin-bottom:1rem; max-width:38rem}
+a{color:var(--accent); text-underline-offset:.15em}
+
+.urgent-strip{
+  border-left:6px solid var(--alert); background:var(--alert-bg); color:var(--ink);
+  padding:.8rem 1rem; border-radius:0 8px 8px 0; margin-bottom:1.5rem;
+}
+.urgent-strip strong{color:var(--alert)}
+
+.stage{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:1rem; display:flex; flex-direction:column; align-items:center; gap:.75rem;
+}
+.canvas-holder{line-height:0}
+canvas{display:block; border-radius:2px}
+canvas.marking{touch-action:none; cursor:crosshair}
+canvas:focus{outline:none}
+canvas:focus-visible{outline:3px solid var(--accent); outline-offset:4px}
+.distance{font-size:1rem; color:var(--muted); text-align:center; max-width:34rem; margin:0}
+.distance b{color:var(--ink)}
+
+.controls{display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center; margin-top:.9rem}
+.seg{display:inline-flex; border:2px solid var(--accent); border-radius:999px; overflow:hidden}
+.seg button{border:0; border-radius:0; background:transparent; color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+button{
+  font:inherit; font-size:1rem; font-weight:700; cursor:pointer;
+  padding:.6rem 1rem; border-radius:999px; min-height:44px;
+  border:2px solid var(--border-ui); background:var(--surface); color:var(--ink);
+}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+button.toggle[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent)}
+button:focus-visible, input:focus-visible, a:focus-visible, .skip:focus{outline:3px solid var(--accent); outline-offset:3px}
+.seg button:focus-visible{outline-offset:-5px; outline-color:var(--accent-ink)}
+.seg button[aria-pressed="false"]:focus-visible{outline-color:var(--accent)}
+.mark-status{font-size:1rem; color:var(--muted); text-align:center; margin:.6rem auto 0; max-width:36rem}
+
+.imm-bar{display:none}
+body.immersive{overflow:hidden}
+body.immersive .stage{
+  position:fixed; inset:0; z-index:10; border-radius:0; border:0; justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
+}
+body.immersive .imm-bar{display:flex; gap:.75rem; align-items:center; justify-content:center; flex-wrap:wrap}
+body.immersive .distance{display:none}
+
+section{margin-top:2.25rem}
+ol.steps{padding-left:1.4rem; margin:0}
+ol.steps li{margin-bottom:.55rem; padding-left:.2rem}
+
+.box{border-radius:12px; padding:1rem 1.1rem; margin:0 0 1rem; border:2px solid}
+.box h3{font-size:1.15rem; margin:0 0 .4rem}
+.box p:last-child{margin:0}
+.box.warn{background:var(--warn-bg); border-color:var(--warn)}
+.box.warn h3{color:var(--warn)}
+.box.alert{background:var(--alert-bg); border-color:var(--alert)}
+.box.alert h3{color:var(--alert)}
+
+.cal{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:1rem}
+.card-scroll{overflow-x:auto}
+.card-ref{
+  aspect-ratio:85.6/53.98; border:2px dashed var(--accent); border-radius:10px;
+  background:var(--accent-soft); margin:.75rem 0;
+  display:flex; align-items:center; justify-content:center; color:var(--ink); font-size:.95rem; text-align:center; padding:.5rem;
+}
+.cal label{display:block; font-weight:700; margin-top:.4rem}
+input[type=range]{width:100%; accent-color:var(--accent); min-height:44px}
+.row{display:flex; flex-wrap:wrap; gap:.5rem; align-items:center}
+.status-msg{color:var(--muted); font-size:1rem; margin:.6rem 0 0; min-height:1.5em}
+
+footer{margin-top:2.5rem; color:var(--muted); font-size:.95rem; border-top:1px solid var(--line); padding-top:1rem}
+footer strong{color:var(--ink)}
+@media (max-width:480px){ h1{font-size:1.8rem} .stage{padding:.6rem} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important; scroll-behavior:auto!important} }
+@media (forced-colors: active){ button[aria-pressed="true"]{outline:2px solid CanvasText} .box,.urgent-strip{border:2px solid CanvasText} }
+</style>
+</head>
+<body>
+<a class="skip" href="#main" data-imm-hide data-i18n="skip">Aller au contenu</a>
+<div class="wrap">
+  <header data-imm-hide>
+    <div class="topbar">
+      <nav class="lang" id="langNav" aria-label="Langue">
+        <button type="button" data-lang="fr" lang="fr" aria-pressed="true">Français</button>
+        <button type="button" data-lang="en" lang="en" aria-pressed="false">English</button>
+      </nav>
+    </div>
+    <h1 data-i18n="h1">Grille d'Amsler</h1>
+    <p class="lede" data-i18n="lede">Une information de prévention pour connaître ce test simple de la vision centrale et les signes qui doivent amener à consulter.</p>
+    <div class="urgent-strip" role="note" data-i18n-html="strip"><strong>Éclairs lumineux, pluie soudaine de points noirs ou voile qui s'étend dans votre champ de vision ?</strong> Consultez un ophtalmologiste en urgence.</div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <h2 class="sr" data-i18n="gridTitle">La grille</h2>
+    <div class="stage" id="stage">
+      <div class="imm-bar">
+        <p id="immEye" style="margin:0"></p>
+        <button type="button" id="exitImm" data-i18n="exitImm">Quitter le plein écran</button>
+      </div>
+      <div class="canvas-holder">
+        <canvas id="grid" role="img" aria-label="Grille d'Amsler" aria-describedby="markHint"></canvas>
+      </div>
+      <p class="distance" id="distance"></p>
+    </div>
+
+    <div class="controls" role="group" id="controls" aria-label="Réglages de la grille" data-imm-hide>
+      <div class="seg" role="group" id="eyeGroup" aria-label="Œil testé">
+        <button type="button" data-eye="droit" aria-pressed="true" data-i18n="eyeR">Œil droit</button>
+        <button type="button" data-eye="gauche" aria-pressed="false" data-i18n="eyeL">Œil gauche</button>
+      </div>
+      <button type="button" class="toggle" id="markBtn" aria-pressed="false" data-i18n="markBtn">Marquer les zones</button>
+      <button type="button" id="clearBtn" data-i18n="clearBtn">Effacer le marquage</button>
+      <button type="button" class="toggle" id="invertBtn" aria-pressed="false" data-i18n="invertBtn">Fond noir</button>
+      <button type="button" id="fullBtn" data-i18n="fullBtn">Plein écran</button>
+    </div>
+    <div class="mark-status" data-imm-hide>
+      <p id="markHint" hidden></p>
+      <p id="markCount" style="margin:0"></p>
+    </div>
+
+    <section aria-labelledby="h-how" data-imm-hide>
+      <h2 id="h-how" data-i18n="howTitle">Comment faire le test</h2>
+      <ol class="steps">
+        <li data-i18n="s1"></li><li data-i18n="s2"></li><li data-i18n="s3"></li><li data-i18n="s4"></li>
+        <li data-i18n="s5"></li><li data-i18n="s6"></li><li data-i18n="s7"></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="h-when" data-imm-hide>
+      <h2 id="h-when" data-i18n="whenTitle">Quand consulter</h2>
+      <div class="box alert">
+        <h3 data-i18n="urgTitle">En urgence, le jour même</h3>
+        <p data-i18n="urgText"></p>
+      </div>
+      <div class="box warn">
+        <h3 data-i18n="soonTitle">Rapidement</h3>
+        <p data-i18n="soonText"></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-cal" data-imm-hide>
+      <h2 id="h-cal" data-i18n="calTitle">Calibrer l'écran</h2>
+      <div class="cal">
+        <p data-i18n="calText"></p>
+        <div class="card-scroll"><div class="card-ref" id="cardRef" data-i18n="cardLabel">Largeur d'une carte bancaire</div></div>
+        <label for="calRange" data-i18n="rangeLabel">Largeur du rectangle</label>
+        <input type="range" id="calRange" min="120" max="900" step="1">
+        <div class="row" style="margin-top:.6rem">
+          <button type="button" class="primary" id="calSave" data-i18n="calSave">Valider la calibration</button>
+          <button type="button" id="calReset" data-i18n="calReset">Revenir à la valeur par défaut</button>
+        </div>
+        <p class="status-msg" id="calMsg" role="status"></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-lim" data-imm-hide>
+      <h2 id="h-lim" data-i18n="limTitle">Ce que ce test ne voit pas</h2>
+      <p data-i18n="lim1"></p>
+      <p data-i18n="lim2"></p>
+    </section>
+  </main>
+
+  <footer data-imm-hide>
+    <p data-i18n-html="fDisclaimer"></p>
+    <p data-i18n-html="fData"></p>
+    <p data-i18n-html="fLegal"></p>
+    <p data-i18n-html="fA11y"></p>
+    <p data-i18n-html="fCredits"></p>
+  </footer>
+</div>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  var CARD_MM = 85.6, GRID_MM = 100, N = 20, KEY = 'amsler-v1';
+  var REPO_ISSUES = 'https://github.com/Antoine-A/amsler/issues';
+
+  var T = {
+    fr: {
+      docTitle: "Grille d'Amsler : test de la vision centrale",
+      desc: "Grille d’Amsler en ligne : information de prévention sur la vision centrale et les signes d’alerte du décollement de rétine.",
+      skip: "Aller au contenu",
+      langNav: "Langue",
+      h1: "Grille d'Amsler",
+      lede: "Une information de prévention pour connaître ce test simple de la vision centrale et les signes qui doivent amener à consulter. Cette page ne pose aucun diagnostic et ne remplace pas un examen par un ophtalmologiste.",
+      strip: "<strong>Éclairs lumineux, pluie soudaine de points noirs ou voile qui s'étend dans votre champ de vision ?</strong> Ce sont des signes possibles de décollement de rétine : consultez un ophtalmologiste en urgence, aujourd'hui même, sans attendre ce test.",
+      gridTitle: "La grille",
+      controls: "Réglages de la grille",
+      eyeGroup: "Œil testé",
+      eyeR: "Œil droit", eyeL: "Œil gauche",
+      markBtn: "Marquer les zones", clearBtn: "Effacer le marquage", invertBtn: "Fond noir", fullBtn: "Plein écran",
+      exitImm: "Quitter le plein écran", immDialog: "Grille en plein écran",
+      cover: { droit: "<b>Œil droit</b> : couvrez l'œil gauche", gauche: "<b>Œil gauche</b> : couvrez l'œil droit" },
+      eyeShort: { droit: "œil droit", gauche: "œil gauche" },
+      imgLabel: "Grille d'Amsler : quadrillage de 20 carrés sur 20 avec un point central à fixer.",
+      appLabel: "Zone de marquage de la grille, 20 lignes sur 20 colonnes.",
+      markHint: "Touchez ou faites glisser pour marquer des cases, touchez une case marquée pour l'effacer. Au clavier : flèches pour vous déplacer, Espace ou Entrée pour marquer ou effacer, Échap pour terminer.",
+      count: function(n, eye){ return n === 0 ? "Aucune case marquée pour l'" + eye + "." : (n === 1 ? "1 case marquée pour l'" + eye + "." : n + " cases marquées pour l'" + eye + "."); },
+      cell: function(r, c, on){ return "Ligne " + r + ", colonne " + c + (on ? ", marquée" : ", non marquée"); },
+      cleared: "Marquage effacé.",
+      distance: function(cm, d){ return "Grille d'environ " + cm + " cm : tenez l'écran à <b>environ " + d + " cm</b> de l'œil testé."; },
+      uncal: " Taille estimée : calibrez l'écran pour une distance fiable.",
+      howTitle: "Comment faire le test",
+      s1: "Gardez vos lunettes de lecture ou vos lentilles habituelles, dans une pièce bien éclairée.",
+      s2: "Calibrez l'écran une première fois (section plus bas) pour que la distance indiquée sous la grille soit juste.",
+      s3: "Placez l'écran à cette distance et couvrez un œil avec la paume, sans appuyer dessus.",
+      s4: "Fixez le point central sans le quitter du regard pendant tout le test.",
+      s5: "Sans bouger les yeux, observez : les lignes sont-elles droites, les carrés tous identiques, les quatre coins visibles ?",
+      s6: "Si vous le souhaitez, activez « Marquer les zones » pour signaler les cases concernées, à la souris, au doigt ou au clavier.",
+      s7: "Recommencez avec l'autre œil.",
+      whenTitle: "Quand consulter",
+      urgTitle: "En urgence, le jour même",
+      urgText: "Si vous remarquez des éclairs ou flashs lumineux, l'apparition soudaine de nombreux points noirs ou filaments, une ombre ou un voile qui s'étend dans votre champ de vision, ou une baisse brutale de la vue. Contactez un ophtalmologiste ou un service d'urgences ophtalmologiques. Si vous ne joignez personne, appelez le 15 ou le 112.",
+      soonTitle: "Rapidement",
+      soonText: "Si, en regardant une grille comme celle-ci ou dans la vie courante, des lignes droites vous paraissent ondulées, si une zone semble floue, grisée ou absente, ou si cela change par rapport à d'habitude. Une modification récente ou brutale justifie une consultation sans attendre.",
+      calTitle: "Calibrer l'écran",
+      calText: "La grille doit mesurer 10 cm pour être lue à 30 cm. Comme chaque écran est différent, posez une carte bancaire (ou toute carte au format standard) à plat sur l'écran, puis ajustez le curseur jusqu'à ce que le rectangle ait exactement la largeur de la carte.",
+      cardLabel: "Largeur d'une carte bancaire",
+      rangeLabel: "Largeur du rectangle",
+      px: function(n){ return n + " pixels"; },
+      calSave: "Valider la calibration", calReset: "Revenir à la valeur par défaut",
+      calSaved: "Calibration enregistrée pour cet écran.",
+      calResetMsg: "Valeur par défaut rétablie : la taille de la grille est de nouveau estimée.",
+      limTitle: "Ce que ce test ne voit pas",
+      lim1: "La grille d'Amsler ne concerne que les 10 degrés centraux de la vision, c'est-à-dire la zone de la macula. Les ophtalmologistes l'utilisent comme l'un de leurs outils, toujours en complément d'un examen.",
+      lim2: "Beaucoup de problèmes de rétine, dont le décollement, commencent en périphérie : voir cette grille normalement ne permet donc pas d'exclure une maladie. Seul un examen du fond d'œil par un ophtalmologiste permet de conclure.",
+      fDisclaimer: "<strong>Avertissement.</strong> Cette page est un support d'information générale. Elle n'est pas un dispositif médical, n'interprète pas ce que vous voyez et ne fournit aucun résultat ni recommandation personnalisée. En cas de doute sur votre vision, consultez un professionnel de santé.",
+      fData: "<strong>Données.</strong> L'éditeur ne collecte aucune donnée personnelle ni de santé : pas de compte, pas de formulaire, pas de mesure d'audience, pas de cookie. La calibration, le choix du fond et la langue sont gardés uniquement dans votre navigateur ; les cases marquées disparaissent quand vous quittez la page. Comme tout hébergeur, GitHub enregistre des données techniques de connexion (dont l'adresse IP) pour la sécurité de son service, selon sa propre <a href=\"https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement\">déclaration de confidentialité (GitHub)</a>.",
+      fLegal: "<strong>Mentions légales.</strong> Site édité à titre personnel et non professionnel. Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis, téléphone +1 877 448 4820.",
+      fA11y: "<strong>Accessibilité.</strong> Cette page a été conçue pour respecter le RGAA 4.1 et les WCAG 2.1 niveau AA. Elle n'a pas encore fait l'objet d'un audit : en l'absence d'audit, elle est déclarée non conforme au sens du RGAA. Pour signaler une difficulté, <a href=\"" + REPO_ISSUES + "\">ouvrez une demande sur le dépôt du projet</a>.",
+      fCredits: "<strong>Crédits.</strong> Police Atkinson Hyperlegible du Braille Institute of America, sous licence SIL Open Font License 1.1. Code sous licence MIT, fourni en l'état, sans garantie."
+    },
+    en: {
+      docTitle: "Amsler grid: central vision check",
+      desc: "Online Amsler grid: prevention information about central vision and the warning signs of retinal detachment.",
+      skip: "Skip to content",
+      langNav: "Language",
+      h1: "Amsler grid",
+      lede: "Prevention information about this simple central vision check and the signs that should lead you to see a doctor. This page does not diagnose anything and does not replace an examination by an ophthalmologist.",
+      strip: "<strong>Flashes of light, a sudden shower of dark spots, or a shadow spreading across your vision?</strong> These can be signs of retinal detachment: see an ophthalmologist urgently, today, without waiting for this test.",
+      gridTitle: "The grid",
+      controls: "Grid settings",
+      eyeGroup: "Eye being tested",
+      eyeR: "Right eye", eyeL: "Left eye",
+      markBtn: "Mark areas", clearBtn: "Clear marks", invertBtn: "Black background", fullBtn: "Full screen",
+      exitImm: "Exit full screen", immDialog: "Full-screen grid",
+      cover: { droit: "<b>Right eye</b>: cover your left eye", gauche: "<b>Left eye</b>: cover your right eye" },
+      eyeShort: { droit: "right eye", gauche: "left eye" },
+      imgLabel: "Amsler grid: a 20 by 20 square grid with a central dot to look at.",
+      appLabel: "Grid marking area, 20 rows by 20 columns.",
+      markHint: "Tap or drag to mark squares, tap a marked square to clear it. With a keyboard: arrow keys to move, Space or Enter to mark or clear, Escape to finish.",
+      count: function(n, eye){ return n === 0 ? "No squares marked for the " + eye + "." : (n === 1 ? "1 square marked for the " + eye + "." : n + " squares marked for the " + eye + "."); },
+      cell: function(r, c, on){ return "Row " + r + ", column " + c + (on ? ", marked" : ", not marked"); },
+      cleared: "Marks cleared.",
+      distance: function(cm, d, inch, din){ return "Grid about " + cm + " cm (" + inch + " in) wide: hold the screen <b>about " + d + " cm (" + din + " in)</b> from the eye being tested."; },
+      uncal: " Estimated size: calibrate your screen for an accurate distance.",
+      howTitle: "How to take the test",
+      s1: "Wear your usual reading glasses or contact lenses, in a well-lit room.",
+      s2: "Calibrate your screen once (section below) so the distance shown under the grid is accurate.",
+      s3: "Hold the screen at that distance and cover one eye with your palm, without pressing on it.",
+      s4: "Look at the central dot and keep your gaze on it throughout the test.",
+      s5: "Without moving your eyes, check: are the lines straight, are all the squares the same size, can you see all four corners?",
+      s6: "If you wish, turn on “Mark areas” to highlight the affected squares with a mouse, a finger or the keyboard.",
+      s7: "Repeat with the other eye.",
+      whenTitle: "When to see a doctor",
+      urgTitle: "Urgently, the same day",
+      urgText: "If you notice flashes of light, a sudden shower of dark spots or threads (floaters), a shadow or curtain spreading across your vision, or a sudden drop in vision. Contact an ophthalmologist or an emergency eye service. If you cannot reach anyone, call your local emergency number (112 in Europe, 15 in France).",
+      soonTitle: "Soon",
+      soonText: "If, when looking at a grid like this one or in daily life, straight lines look wavy, an area looks blurred, grey or missing, or things look different from usual. A recent or sudden change calls for a prompt appointment.",
+      calTitle: "Calibrate your screen",
+      calText: "The grid should be 10 cm (4 in) wide when viewed from 30 cm (12 in). Because every screen is different, place a bank or credit card (or any standard-size card) flat against the screen, then move the slider until the rectangle is exactly as wide as the card.",
+      cardLabel: "Width of a bank card",
+      rangeLabel: "Rectangle width",
+      px: function(n){ return n + " pixels"; },
+      calSave: "Save calibration", calReset: "Restore default",
+      calSaved: "Calibration saved for this screen.",
+      calResetMsg: "Default restored: the grid size is estimated again.",
+      limTitle: "What this test cannot see",
+      lim1: "The Amsler grid only covers the central 10 degrees of vision, the area of the macula. Eye doctors use it as one of their tools, always alongside an examination.",
+      lim2: "Many retinal problems, including retinal detachment, start in peripheral vision: seeing this grid normally does not rule out an eye disease. Only a dilated eye examination by an ophthalmologist can tell.",
+      fDisclaimer: "<strong>Disclaimer.</strong> This page provides general information only. It is not a medical device, does not interpret what you see and gives no personal result or recommendation. If you have any concern about your vision, see a health professional.",
+      fData: "<strong>Data.</strong> The publisher collects no personal or health data: no account, no form, no analytics, no cookies. Calibration, background and language choices are stored only in your browser; marked squares are lost when you leave the page. Like any host, GitHub logs technical connection data (including IP addresses) to secure its service, under its own <a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\">privacy statement (GitHub)</a>.",
+      fLegal: "<strong>Legal notice.</strong> Published on a personal, non-commercial basis. Host: GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States, phone +1 877 448 4820.",
+      fA11y: "<strong>Accessibility.</strong> This page was designed to meet RGAA 4.1 and WCAG 2.1 level AA. It has not been audited yet, so it is declared non-compliant under RGAA until an audit is carried out. To report a problem, <a href=\"" + REPO_ISSUES + "\">open an issue on the project repository</a>.",
+      fCredits: "<strong>Credits.</strong> Atkinson Hyperlegible typeface by the Braille Institute of America, under the SIL Open Font License 1.1. Code under the MIT licence, provided as is, without warranty."
+    }
+  };
+
+  /* ---------- Stockage local (préférences uniquement) ---------- */
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; } }
+  var data = load();
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} }
+  if (data.history) { delete data.history; save(); }
+
+  var lang = (function(){
+    var q = null;
+    try { q = new URLSearchParams(location.search).get('lang'); } catch(e){}
+    if (q === 'fr' || q === 'en') return q;
+    if (data.lang === 'fr' || data.lang === 'en') return data.lang;
+    return /^fr\b/i.test(navigator.language || '') ? 'fr' : 'en';
+  })();
+  function t(k){ return T[lang][k]; }
+
+  var pxPerMm = data.pxPerMm || 3.78;
+  var inverted = !!data.inverted;
+  var eye = 'droit', marking = false, drawing = false, paintOn = true, size = 300;
+  var marks = { droit: {}, gauche: {} };
+  var cursor = { r: 10, c: 10 };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var canvas = $('grid'), ctx = canvas.getContext('2d'), stage = $('stage');
+
+  function fmt(n, d){ return n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB', { maximumFractionDigits: d }); }
+  function announce(msg){ var l = $('live'); l.textContent = ''; setTimeout(function(){ l.textContent = msg; }, 30); }
+  function markCount(){ return Object.keys(marks[eye]).length; }
+
+  /* ---------- Langue ---------- */
+  function applyLang(){
+    document.documentElement.lang = lang;
+    document.title = t('docTitle');
+    var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute('content', t('desc'));
+    document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){ el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+    $('langNav').setAttribute('aria-label', t('langNav'));
+    $('controls').setAttribute('aria-label', t('controls'));
+    $('eyeGroup').setAttribute('aria-label', t('eyeGroup'));
+    $('markHint').textContent = t('markHint');
+    document.querySelectorAll('[data-lang]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.lang === lang); });
+    if (document.body.classList.contains('immersive')) stage.setAttribute('aria-label', t('immDialog'));
+    $('calMsg').textContent = '';
+    updateRangeText();
+    updateEyeText();
+    updateMarkUI();
+    layout();
+    data.lang = lang; save();
+    try { var u = new URL(location.href); u.searchParams.set('lang', lang); history.replaceState(null, '', u); } catch(e){}
+  }
+  document.querySelectorAll('[data-lang]').forEach(function(b){
+    b.addEventListener('click', function(){ if (lang !== b.dataset.lang){ lang = b.dataset.lang; applyLang(); } });
+  });
+
+  /* ---------- Dessin ---------- */
+  function geom(){
+    var W = canvas.width, lw = Math.max(1, W / 480), pad = lw * 2, inner = W - 2 * pad;
+    return { W: W, lw: lw, pad: pad, inner: inner, step: inner / N };
+  }
+  function layout(){
+    var imm = document.body.classList.contains('immersive');
+    var cs = getComputedStyle(stage);
+    var avail = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (imm) {
+      var bar = stage.querySelector('.imm-bar');
+      var h = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - bar.offsetHeight - 16;
+      avail = Math.min(avail, h);
+    }
+    size = Math.max(160, Math.floor(Math.min(GRID_MM * pxPerMm, avail)));
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.height = Math.round(size * dpr);
+    draw();
+    var mm = size / pxPerMm, dist = 30 * mm / GRID_MM;
+    var txt = t('distance')(fmt(mm / 10, 1), Math.round(dist), fmt(mm / 25.4, 1), Math.round(dist / 2.54));
+    if (!data.pxPerMm) txt += t('uncal');
+    $('distance').innerHTML = txt;
+  }
+  function draw(){
+    var g = geom(), W = g.W;
+    var bg = inverted ? '#000000' : '#FFFFFF', fg = inverted ? '#FFFFFF' : '#000000';
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, W);
+
+    // cases marquées (contraste d'au moins 3:1 avec le fond)
+    ctx.fillStyle = inverted ? 'rgba(255,100,100,0.75)' : 'rgba(211,47,47,0.7)';
+    Object.keys(marks[eye]).forEach(function(k){
+      var p = k.split('-'), r = +p[0], c = +p[1];
+      ctx.fillRect(g.pad + c * g.step, g.pad + r * g.step, g.step, g.step);
+    });
+
+    ctx.strokeStyle = fg; ctx.lineWidth = g.lw; ctx.beginPath();
+    for (var i = 1; i < N; i++){
+      var q = g.pad + i * g.step;
+      ctx.moveTo(q, g.pad); ctx.lineTo(q, W - g.pad);
+      ctx.moveTo(g.pad, q); ctx.lineTo(W - g.pad, q);
+    }
+    ctx.stroke();
+    ctx.lineWidth = g.lw * 2;
+    ctx.strokeRect(g.pad, g.pad, g.inner, g.inner);
+
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.arc(W / 2, W / 2, Math.max(3, W / 75), 0, Math.PI * 2); ctx.fill();
+
+    // curseur clavier, visible sur fond clair comme sombre
+    if (marking && document.activeElement === canvas){
+      var x = g.pad + cursor.c * g.step, y = g.pad + cursor.r * g.step;
+      ctx.lineWidth = Math.max(4, W / 120); ctx.strokeStyle = inverted ? '#000000' : '#FFFFFF';
+      ctx.strokeRect(x + 1, y + 1, g.step - 2, g.step - 2);
+      ctx.lineWidth = Math.max(2, W / 240); ctx.strokeStyle = '#0050B3';
+      ctx.strokeRect(x + 1, y + 1, g.step - 2, g.step - 2);
+    }
+  }
+
+  /* ---------- Marquage souris, tactile et clavier ---------- */
+  function keyOf(r, c){ return r + '-' + c; }
+  function isMarked(r, c){ return !!marks[eye][keyOf(r, c)]; }
+  function setCell(r, c, on){
+    var k = keyOf(r, c);
+    if (on) marks[eye][k] = 1; else delete marks[eye][k];
+  }
+  function cellAt(e){
+    var b = canvas.getBoundingClientRect();
+    var c = Math.floor((e.clientX - b.left) / b.width * N), r = Math.floor((e.clientY - b.top) / b.height * N);
+    return { r: Math.min(N - 1, Math.max(0, r)), c: Math.min(N - 1, Math.max(0, c)) };
+  }
+  canvas.addEventListener('pointerdown', function(e){
+    if (!marking) return;
+    e.preventDefault(); drawing = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch(err){}
+    var p = cellAt(e); cursor = p;
+    paintOn = !isMarked(p.r, p.c);
+    setCell(p.r, p.c, paintOn); draw(); updateMarkUI();
+  });
+  canvas.addEventListener('pointermove', function(e){
+    if (!drawing) return;
+    var p = cellAt(e);
+    if (isMarked(p.r, p.c) !== paintOn){ cursor = p; setCell(p.r, p.c, paintOn); draw(); updateMarkUI(); }
+  });
+  ['pointerup', 'pointercancel'].forEach(function(ev){ canvas.addEventListener(ev, function(){ drawing = false; }); });
+
+  canvas.addEventListener('keydown', function(e){
+    if (!marking) return;
+    var moved = false;
+    switch (e.key){
+      case 'ArrowUp': cursor.r = Math.max(0, cursor.r - 1); moved = true; break;
+      case 'ArrowDown': cursor.r = Math.min(N - 1, cursor.r + 1); moved = true; break;
+      case 'ArrowLeft': cursor.c = Math.max(0, cursor.c - 1); moved = true; break;
+      case 'ArrowRight': cursor.c = Math.min(N - 1, cursor.c + 1); moved = true; break;
+      case 'Home': cursor.c = 0; moved = true; break;
+      case 'End': cursor.c = N - 1; moved = true; break;
+      case ' ': case 'Enter':
+        e.preventDefault();
+        setCell(cursor.r, cursor.c, !isMarked(cursor.r, cursor.c));
+        draw(); updateMarkUI();
+        announce(t('cell')(cursor.r + 1, cursor.c + 1, isMarked(cursor.r, cursor.c)));
+        return;
+      case 'Escape':
+        if (!document.body.classList.contains('immersive')){
+          e.preventDefault(); e.stopPropagation();
+          setMarking(false); $('markBtn').focus();
+        }
+        return;
+      default: return;
+    }
+    if (moved){
+      e.preventDefault(); draw();
+      announce(t('cell')(cursor.r + 1, cursor.c + 1, isMarked(cursor.r, cursor.c)));
+    }
+  });
+  canvas.addEventListener('focus', draw);
+  canvas.addEventListener('blur', draw);
+
+  function updateMarkUI(){
+    var n = markCount();
+    $('markCount').textContent = t('count')(n, t('eyeShort')[eye]);
+    $('markHint').hidden = !marking;
+    canvas.setAttribute('aria-label', (marking ? t('appLabel') : t('imgLabel')) + ' ' + t('count')(n, t('eyeShort')[eye]));
+  }
+  function setMarking(on){
+    marking = on;
+    $('markBtn').setAttribute('aria-pressed', on);
+    canvas.classList.toggle('marking', on);
+    canvas.setAttribute('role', on ? 'application' : 'img');
+    if (on) canvas.setAttribute('tabindex', '0'); else canvas.removeAttribute('tabindex');
+    updateMarkUI();
+    if (on) canvas.focus(); else draw();
+  }
+  $('markBtn').addEventListener('click', function(){ setMarking(!marking); });
+  $('clearBtn').addEventListener('click', function(){ marks[eye] = {}; draw(); updateMarkUI(); announce(t('cleared')); });
+
+  /* ---------- Œil testé ---------- */
+  function updateEyeText(){ $('immEye').innerHTML = t('cover')[eye]; }
+  function setEye(e){
+    eye = e;
+    document.querySelectorAll('[data-eye]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.eye === e); });
+    updateEyeText(); updateMarkUI(); draw();
+  }
+  document.querySelectorAll('[data-eye]').forEach(function(b){ b.addEventListener('click', function(){ setEye(b.dataset.eye); }); });
+
+  /* ---------- Contraste ---------- */
+  function applyInvert(){ $('invertBtn').setAttribute('aria-pressed', inverted); draw(); }
+  $('invertBtn').addEventListener('click', function(){ inverted = !inverted; data.inverted = inverted; save(); applyInvert(); });
+
+  /* ---------- Plein écran (comportement de fenêtre modale) ---------- */
+  function setInert(on){
+    document.querySelectorAll('[data-imm-hide]').forEach(function(el){
+      if (on){ el.setAttribute('inert', ''); el.setAttribute('aria-hidden', 'true'); }
+      else { el.removeAttribute('inert'); el.removeAttribute('aria-hidden'); }
+    });
+  }
+  function enterImm(){
+    document.body.classList.add('immersive');
+    stage.setAttribute('role', 'dialog'); stage.setAttribute('aria-modal', 'true'); stage.setAttribute('aria-label', t('immDialog'));
+    setInert(true);
+    var el = document.documentElement;
+    if (el.requestFullscreen) { try { el.requestFullscreen().catch(function(){}); } catch(e){} }
+    requestAnimationFrame(function(){ layout(); $('exitImm').focus(); });
+  }
+  function exitImm(){
+    if (!document.body.classList.contains('immersive')) return;
+    document.body.classList.remove('immersive');
+    stage.removeAttribute('role'); stage.removeAttribute('aria-modal'); stage.removeAttribute('aria-label');
+    setInert(false);
+    if (document.fullscreenElement && document.exitFullscreen) { try { document.exitFullscreen().catch(function(){}); } catch(e){} }
+    requestAnimationFrame(function(){ layout(); $('fullBtn').focus(); });
+  }
+  $('fullBtn').addEventListener('click', enterImm);
+  $('exitImm').addEventListener('click', exitImm);
+  document.addEventListener('fullscreenchange', function(){ if (!document.fullscreenElement) exitImm(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') exitImm(); });
+  stage.addEventListener('keydown', function(e){
+    // garde le focus dans la fenêtre plein écran
+    if (e.key !== 'Tab' || !document.body.classList.contains('immersive')) return;
+    var f = Array.prototype.filter.call(stage.querySelectorAll('button, [tabindex="0"]'), function(x){ return x.offsetParent !== null; });
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  });
+
+  /* ---------- Calibration ---------- */
+  var range = $('calRange'), card = $('cardRef');
+  function updateRangeText(){ range.setAttribute('aria-valuetext', t('px')(range.value)); }
+  function setCard(w){ card.style.width = w + 'px'; }
+  range.value = Math.round(pxPerMm * CARD_MM); setCard(range.value);
+  range.addEventListener('input', function(){ setCard(range.value); updateRangeText(); });
+  $('calSave').addEventListener('click', function(){
+    pxPerMm = range.value / CARD_MM; data.pxPerMm = pxPerMm; save(); layout();
+    $('calMsg').textContent = t('calSaved');
+  });
+  $('calReset').addEventListener('click', function(){
+    delete data.pxPerMm; save(); pxPerMm = 3.78;
+    range.value = Math.round(pxPerMm * CARD_MM); setCard(range.value); updateRangeText(); layout();
+    $('calMsg').textContent = t('calResetMsg');
+  });
+
+  /* ---------- Initialisation ---------- */
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(layout, 120); });
+  applyInvert(); setEye('droit'); applyLang();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+})();
+</script>
+</body>
+</html>
